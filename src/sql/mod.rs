@@ -6,24 +6,24 @@ use crate::{
 pub use bind::{Bind, Identifier};
 
 mod bind;
-pub(crate) mod escape;
+pub mod escape;
 mod ser;
 
 #[derive(Clone)]
-pub(crate) enum SqlBuilder {
+pub enum SqlBuilder {
     InProgress { parts: Vec<Part>, size: usize },
     Failed(String),
 }
 
 #[derive(Clone)]
-pub(crate) enum Part {
+pub enum Part {
     Arg,
     Fields,
     Text(String),
 }
 
 impl SqlBuilder {
-    pub(crate) fn new(template: &str) -> Self {
+    pub fn new(template: &str) -> Self {
         let mut iter = template.split('?');
         let prefix = String::from(iter.next().unwrap());
         let mut size = prefix.len();
@@ -45,7 +45,7 @@ impl SqlBuilder {
         SqlBuilder::InProgress { parts, size }
     }
 
-    pub(crate) fn bind_arg(&mut self, value: impl Bind) {
+    pub fn bind_arg(&mut self, value: impl Bind) {
         if let Self::InProgress { parts, size } = self {
             if let Some(part) = parts.iter_mut().find(|p| matches!(p, Part::Arg)) {
                 let mut s = String::new();
@@ -63,7 +63,7 @@ impl SqlBuilder {
         }
     }
 
-    pub(crate) fn bind_fields<T: Row>(&mut self) {
+    pub fn bind_fields<T: Row>(&mut self) {
         if let Self::InProgress { parts, size } = self {
             if let Some(fields) = row::join_column_names::<T>() {
                 for part in parts.iter_mut().filter(|p| matches!(p, Part::Fields)) {
@@ -74,7 +74,7 @@ impl SqlBuilder {
         }
     }
 
-    pub(crate) fn append(&mut self, suffix: &str) {
+    pub fn append(&mut self, suffix: &str) {
         if let Self::InProgress { parts, size } = self {
             if let Some(Part::Text(text)) = parts.last_mut() {
                 *size += suffix.len();
@@ -85,7 +85,7 @@ impl SqlBuilder {
         }
     }
 
-    pub(crate) fn finish(self) -> Result<String> {
+    pub fn finish(self) -> Result<String> {
         match self {
             Self::InProgress { parts, size } => {
                 Ok(parts
