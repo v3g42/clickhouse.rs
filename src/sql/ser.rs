@@ -86,7 +86,6 @@ impl<'a, W: Write> Serializer for SqlSerializer<'a, W> {
     unsupported!(
         serialize_map(Option<usize>) -> Result<Impossible>,
         serialize_bytes(&[u8]),
-        serialize_none,
         serialize_unit,
         serialize_unit_struct(&'static str),
     );
@@ -106,6 +105,12 @@ impl<'a, W: Write> Serializer for SqlSerializer<'a, W> {
         serialize_f64(f64),
         serialize_bool(bool),
     );
+
+    #[inline]
+    fn serialize_none(self) -> Result {
+        self.writer.write_str("NULL")?;
+        Ok(())
+    }
 
     #[inline]
     fn serialize_char(self, value: char) -> Result {
@@ -140,8 +145,8 @@ impl<'a, W: Write> Serializer for SqlSerializer<'a, W> {
     }
 
     #[inline]
-    fn serialize_some<T: Serialize + ?Sized>(self, _value: &T) -> Result {
-        Err(SqlSerializerError::Unsupported("serialize_some"))
+    fn serialize_some<T: Serialize + ?Sized>(self, value: &T) -> Result {
+        value.serialize(self)
     }
 
     #[inline]
