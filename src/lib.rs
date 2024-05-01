@@ -35,7 +35,7 @@ mod cursor;
 mod http_client;
 mod response;
 mod row;
-mod rowbinary;
+pub mod rowbinary;
 #[cfg(feature = "inserter")]
 mod ticks;
 
